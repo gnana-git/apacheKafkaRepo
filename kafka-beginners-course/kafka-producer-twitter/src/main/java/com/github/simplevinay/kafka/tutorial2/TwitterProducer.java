@@ -34,6 +34,9 @@ public class TwitterProducer {
 	String consumerSecret = "F0I3IvRnOvp9L8wvbLGFe64HbMafVPeUUNDfRdfCBKYrOpL5km";
 	String token = "2169656605-rbxZW7qFdnKbt0Vd7Jp7HXpqShK7WRSqvGkOlYl";
 	String secret = "FHreEEYsG2GdGUvHu5fAR7cz9ybPiS7mlpAVuuQ8umtzn";
+	
+	List<String> terms = Lists.newArrayList("bitcoin","india");
+
 
 	public TwitterProducer() {
 
@@ -114,7 +117,6 @@ public class TwitterProducer {
 		Hosts hosebirdHosts = new HttpHosts(Constants.STREAM_HOST);
 		StatusesFilterEndpoint hosebirdEndpoint = new StatusesFilterEndpoint();
 
-		List<String> terms = Lists.newArrayList("bitcoin");
 
 		hosebirdEndpoint.trackTerms(terms);
 
@@ -140,6 +142,18 @@ public class TwitterProducer {
 		properties.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
 		properties.setProperty(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
 		properties.setProperty(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
+		
+		//Create safe Producer
+		properties.setProperty(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true");
+		properties.setProperty(ProducerConfig.ACKS_CONFIG, "all");
+		properties.setProperty(ProducerConfig.RETRIES_CONFIG, Integer.toString(Integer.MAX_VALUE));
+		properties.setProperty(ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION, "5"); // for kafka >1.0,use 5
+		
+		//High Throughput producer (at a expense of bit of latency and CPU usage)
+		properties.setProperty(ProducerConfig.COMPRESSION_TYPE_CONFIG, "snappy");
+		properties.setProperty(ProducerConfig.LINGER_MS_CONFIG, "20");
+		properties.setProperty(ProducerConfig.BATCH_SIZE_CONFIG, Integer.toString(32 * 1024)); //32 KB
+	
 
 		// Create the Producer
 		KafkaProducer<String, String> producer = new KafkaProducer<String, String>(properties);
